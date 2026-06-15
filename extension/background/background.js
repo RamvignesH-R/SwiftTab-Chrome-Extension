@@ -4,9 +4,7 @@ chrome.runtime.onStartup.addListener(() => {
   cleanSessionClipboard();
 });
 
-chrome.runtime.onSuspend.addListener(() => {
-  cleanSessionClipboard();
-});
+
 
 function cleanSessionClipboard() {
   chrome.storage.local.get(['clipboardData'], (result) => {
@@ -52,16 +50,15 @@ function restoreAlarms() {
   chrome.storage.local.get(['scheduledTasks'], (res) => {
     const tasks = res.scheduledTasks || [];
     tasks.forEach(task => {
-      // ONLY recreate alarms if their absolute deadline hasn't passed yet.
-      // If the deadline passed while Chrome was closed, we DO NOT recreate it.
-      // Instead, we will let a new startup routine process missed tasks safely.
-      if (task.timestamp > Date.now()) {
-        let warningTime = task.timestamp - 10000;
-        if (warningTime > Date.now()) {
-          chrome.alarms.create(task.id + '_warning', { when: warningTime });
-        }
-        chrome.alarms.create(task.id, { when: task.timestamp });
+      let warningTime = task.timestamp - 10000;
+      if (warningTime > Date.now()) {
+        chrome.alarms.create(task.id + '_warning', { when: warningTime });
       }
+      
+      // We recreate the alarm even if it's in the past. 
+      // If Chrome was completely crashed/wiped, this guarantees it fires immediately to catch up.
+      // If Chrome already natively fired it, our synchronous lock in onAlarm prevents double-execution.
+      chrome.alarms.create(task.id, { when: task.timestamp });
     });
   });
 }
@@ -128,6 +125,11 @@ chrome.runtime.onStartup.addListener(() => {
       chrome.storage.local.set({ lastStartupRun: todayStr });
 
       chrome.bookmarks.getChildren(res.startupCollection, (children) => {
+        if (chrome.runtime.lastError) {
+          // Folder was deleted by user. Clean up memory.
+          chrome.storage.local.remove(['startupCollection', 'startupFrequency', 'startupDate']);
+          return;
+        }
         if (children) {
           children.forEach(child => {
             if (child.url) chrome.tabs.create({ url: child.url, active: false });
@@ -138,7 +140,16 @@ chrome.runtime.onStartup.addListener(() => {
   });
 });
 
+const processedAlarms = new Set();
+
 chrome.alarms.onAlarm.addListener((alarm) => {
+  // Absolute lock to prevent Manifest V3 double-firing race conditions
+  if (processedAlarms.has(alarm.name)) return;
+  processedAlarms.add(alarm.name);
+  
+  // Clear the lock after 10 seconds so recurring tasks can fire again in the future
+  setTimeout(() => processedAlarms.delete(alarm.name), 10000);
+
   if (alarm.name.endsWith('_warning')) {
     const taskId = alarm.name.replace('_warning', '');
     chrome.storage.local.get(['scheduledTasks'], (res) => {
@@ -166,10 +177,6 @@ chrome.alarms.onAlarm.addListener((alarm) => {
       const taskIndex = tasks.findIndex(t => t.id === alarm.name);
       if (taskIndex !== -1) {
         const task = tasks[taskIndex];
-        
-        // Prevent opening duplicate tabs if Chrome fired this natively multiple times
-        if (task._hasOpenedTab) return;
-        task._hasOpenedTab = true;
         
         chrome.tabs.create({ url: task.url });
         

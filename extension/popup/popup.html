@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Implementing CSP to mitigate vulnerabilities as planned -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' https: data:;">
+  <title>SwiftTab</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="app-container">
+    <header class="app-header">
+      <div class="brand">SwiftTab</div>
+      <div class="header-actions" style="display:flex; align-items:center; gap:8px;">
+        <div style="position:relative;">
+          <button id="btn-support-center" class="header-support-btn" title="Support & Feedback">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+            <span>Support</span>
+          </button>
+          <div id="support-dropdown" class="support-dropdown hidden">
+             <div class="sd-item" data-type="bug">
+               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+               Report a Bug
+             </div>
+             <div class="sd-item" data-type="feedback">
+               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path></svg>
+               Share Feedback
+             </div>
+             <div class="sd-item" data-type="donate">
+               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+               Support my Work
+             </div>
+          </div>
+        </div>
+        <button id="theme-toggle" class="theme-btn" title="Toggle Dark/Light Mode">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+        </button>
+      </div>
+    </header>
+    <nav class="tab-nav">
+      <button class="tab-btn active" data-tab="bookmarks">Bookmarks</button>
+      <button class="tab-btn" data-tab="schedule">Schedule</button>
+      <button class="tab-btn" data-tab="clipboard">Clipboard</button>
+      <button class="tab-btn" data-tab="calculator">Calculator</button>
+      <button class="tab-btn" data-tab="app-hub">App Hub</button>
+    </nav>
+
+    <main class="tab-content-container">
+      <!-- Tab 1: Bookmarks & Collections -->
+      <section id="bookmarks" class="tab-panel active">
+        <div class="panel-header" style="padding-bottom:5px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <h2 style="margin:0;">Collections</h2>
+            <button id="btn-new-group" class="action-btn" style="display:none;">New Group</button>
+          </div>
+          
+          <div style="display:flex; border-bottom:1px solid var(--border-color); margin-bottom:10px;">
+             <button id="subnav-all" class="bookmark-subnav-btn active" style="flex:1; text-align:center; padding:8px; border-left:none; border-bottom:2px solid var(--accent-color);">All Bookmarks</button>
+             <button id="subnav-groups" class="bookmark-subnav-btn" style="flex:1; text-align:center; padding:8px; border-left:none; border-bottom:2px solid transparent;">Groups</button>
+          </div>
+          
+          <div style="display:flex; gap:10px; margin-bottom:0;">
+            <input type="text" id="bookmark-search" placeholder="Search..." class="search-input" style="flex:1; margin-bottom:0;">
+            <select id="bookmark-sort-select" class="search-input" style="width:auto; margin-bottom:0; padding:4px 8px; background:var(--bg-primary);">
+              <option value="none">Sort (None)</option>
+              <option value="frequent">Most Used</option>
+              <option value="newest">Newest</option>
+              <option value="oldest">Oldest</option>
+              <option value="az">A-Z</option>
+              <option value="za">Z-A</option>
+            </select>
+            <button id="btn-add-current-tab" class="action-btn" title="Add Current Tab" style="padding:4px 8px;">
+               <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            </button>
+          </div>
+        </div>
+        
+        <div id="bookmark-dropzone" style="display:none; padding:15px; text-align:center; border:2px dashed var(--accent-color); margin:0 20px 10px; border-radius:8px; color:var(--accent-color); font-weight:600;">
+           Drop Link Here to Save!
+        </div>
+        
+        <!-- View: All Bookmarks -->
+        <div class="content-area" id="view-all-bookmarks" style="display:flex; flex-direction:column;">
+          <div style="display:flex; align-items:center; padding-bottom:10px; border-bottom:1px solid var(--border-color); margin-bottom:10px;">
+            <input type="checkbox" id="select-all-allbms" style="margin-right:8px; cursor:pointer;">
+            <label for="select-all-allbms" style="font-size:13px; color:var(--text-secondary); cursor:pointer; user-select:none;">Select All Bookmarks</label>
+          </div>
+          <ul id="bookmark-list" class="list-container"></ul>
+        </div>
+        
+        <!-- View: Groups -->
+        <div class="content-area" id="view-groups" style="display:none; flex-direction:column;">
+           <div style="display:flex; align-items:center; padding-bottom:10px; border-bottom:1px solid var(--border-color); margin-bottom:10px;">
+             <input type="checkbox" id="show-default-groups" style="margin-right:8px; cursor:pointer;">
+             <label for="show-default-groups" style="font-size:13px; color:var(--text-secondary); cursor:pointer; user-select:none;">Show default groups</label>
+           </div>
+           <div id="groups-grid" style="display:grid; grid-template-columns:repeat(2, 1fr); gap:10px;"></div>
+        </div>
+        
+        <!-- View: Single Group -->
+        <div class="content-area" id="view-single-group" style="display:none; flex-direction:column;">
+           <div style="display:flex; align-items:center; margin-bottom:10px;">
+              <button id="btn-back-groups" class="icon-btn" style="margin-right:10px;"><svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg></button>
+              <h3 id="single-group-title" style="margin:0; flex:1;">Group Name</h3>
+              <button id="btn-add-to-group" class="action-btn" style="padding:4px 8px; font-size:11px; margin-right:5px;">Add Tab</button>
+              <button id="btn-delete-group" class="action-btn danger" style="padding:4px 8px; font-size:11px;">Delete</button>
+           </div>
+           <div style="display:flex; align-items:center; padding-bottom:10px; border-bottom:1px solid var(--border-color); margin-bottom:10px;">
+             <input type="checkbox" id="select-all-group" style="margin-right:8px; cursor:pointer;">
+             <label for="select-all-group" style="font-size:13px; color:var(--text-secondary); cursor:pointer; user-select:none;">Select All in Group</label>
+           </div>
+           <ul id="single-group-list" class="list-container"></ul>
+        </div>
+        <div id="bookmark-action-bar" class="floating-action-bar hidden">
+          <span id="selected-count">0 selected</span>
+          <div class="action-buttons">
+            <button id="btn-open-selected" class="action-btn">Open</button>
+            <select id="move-dest-select" class="search-input" style="width:85px; margin:0; padding:4px; font-size:12px; background:var(--bg-primary);">
+               <option value="">Move...</option>
+            </select>
+            <select id="copy-dest-select" class="search-input" style="width:85px; margin:0; padding:4px; font-size:12px; background:var(--bg-primary);">
+               <option value="">Copy...</option>
+            </select>
+            <button id="btn-delete-selected" class="action-btn danger">Delete</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Tab 2: Schedule -->
+      <section id="schedule" class="tab-panel" style="position:relative;">
+        <div id="schedule-main" style="flex:1; display:flex; flex-direction:column; overflow:hidden;">
+          <div class="panel-header" style="display:flex; justify-content:space-between; align-items:center;">
+            <h2>Task Schedule</h2>
+            <button id="schedule-settings-btn" class="icon-btn" title="Settings">
+              <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+            </button>
+          </div>
+          <div class="content-area">
+          <form id="schedule-form" class="input-form">
+            <input type="text" id="task-name" placeholder="Task Name" required>
+            <input type="url" id="task-url" placeholder="https://example.com" required>
+            
+            <select id="task-type" class="search-input" style="background:var(--bg-primary); margin-bottom:10px;">
+              <option value="timer">Timer (In X Minutes)</option>
+              <option value="datetime">Specific Date & Time</option>
+              <option value="recurring">Recurring (Daily/Weekly)</option>
+            </select>
+            
+            <div id="schedule-timer-inputs">
+               <input type="number" id="task-timer" class="search-input" placeholder="In X Minutes" min="1" style="background:var(--bg-primary); margin-bottom:0;">
+            </div>
+            
+            <div id="schedule-datetime-inputs" style="display:none; gap:10px;">
+              <input type="date" id="task-date" class="search-input" style="flex:1; background:var(--bg-primary); margin-bottom:0;" title="Specific Date (Optional)">
+              <input type="time" id="task-time" class="search-input" style="flex:1; background:var(--bg-primary); margin-bottom:0;" title="Specific Time">
+            </div>
+            
+            <div id="schedule-recurring-inputs" style="display:none; gap:10px;">
+              <select id="task-recurrence" class="search-input" style="flex:1; background:var(--bg-primary); margin-bottom:0;">
+                 <option value="1440">Daily</option>
+                 <option value="10080">Weekly</option>
+              </select>
+              <input type="time" id="task-recurring-time" class="search-input" style="flex:1; background:var(--bg-primary); margin-bottom:0;" title="Recurring Time">
+            </div>
+            
+            <button type="submit" class="submit-btn" style="margin-top:10px;">Schedule Task</button>
+          </form>
+          <div class="divider"></div>
+          <h3>Active Tasks</h3>
+          <ul id="active-tasks-list" class="list-container"></ul>
+          
+          <div class="divider"></div>
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <h3>Past Tasks</h3>
+            <button id="clear-history-btn" class="action-btn danger" style="padding:2px 8px; font-size:10px;">Clear All</button>
+          </div>
+          <ul id="past-tasks-list" class="list-container"></ul>
+          
+          </div>
+        </div>
+
+        <div id="schedule-settings-page" style="display:none; position:absolute; top:0; left:0; width:100%; height:100%; background:var(--bg-primary); padding:20px; box-sizing:border-box; z-index:10; flex-direction:column;">
+          <div class="panel-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; padding-bottom:10px; border-bottom:1px solid var(--border-color);">
+            <h2 style="margin:0;">Settings</h2>
+            <button id="close-settings-btn" class="icon-btn" style="font-size:16px;">❌</button>
+          </div>
+          
+          <div style="margin-bottom:20px;">
+             <h3>Startup Collection</h3>
+             <p style="font-size:12px; color:var(--text-secondary); margin-bottom:10px;">Select a group of tabs to automatically open when Chrome starts.</p>
+             <div style="display:flex; flex-direction:column; gap:10px;">
+               <select id="startup-collection-select" class="search-input" style="margin-bottom:0; background:var(--bg-primary);">
+                  <option value="none">None (Disabled)</option>
+               </select>
+               <select id="startup-frequency-select" class="search-input" style="margin-bottom:0; background:var(--bg-primary);">
+                  <option value="always">Every time Chrome starts</option>
+                  <option value="daily">Once a day</option>
+                  <option value="weekdays_always">Every time Chrome starts (Mon-Fri)</option>
+                  <option value="weekdays_once">Once a day (Mon-Fri)</option>
+                  <option value="specific_date">On a specific date</option>
+               </select>
+               <input type="date" id="startup-date" class="search-input" style="display:none; margin-bottom:0; background:var(--bg-primary);">
+               <div style="display:flex; justify-content:flex-end; gap:10px;">
+                 <button id="btn-reset-startup" class="action-btn danger" title="Clear today's memory to test 'Once a day' options again" style="padding:4px 8px; font-size:12px;">Reset Daily Limit</button>
+                 <button id="btn-save-startup" class="action-btn" style="padding:4px 8px; font-size:12px;">Save Settings</button>
+               </div>
+             </div>
+          </div>
+          
+          <label style="font-size:14px; color:var(--text-secondary); display:block; margin-bottom:10px;">Notification Sound</label>
+          <div style="display:flex; align-items:center; gap:10px; background:var(--bg-secondary); padding:10px; border-radius:8px; border:1px solid var(--border-color);">
+            <select id="sound-select" style="flex:1; background:transparent; border:none; color:var(--text-primary); outline:none; font-size:14px; cursor:pointer;">
+              <option value="default">Default Sound</option>
+            </select>
+            
+            <input type="file" id="sound-upload" accept="audio/*" style="display:none;">
+            <button id="btn-add-sound" class="icon-btn" title="Add custom sound" style="color:var(--text-primary); font-size:16px; padding:0 5px;">➕</button>
+            <button id="btn-delete-sound" class="icon-btn" title="Delete sound" style="font-size:16px; padding:0 5px; color:var(--text-secondary);">➖</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Tab 3: Clipboard -->
+      <section id="clipboard" class="tab-panel">
+        <div class="panel-header" style="display:flex; justify-content:space-between; align-items:center;">
+          <h2>Session Clipboard</h2>
+          <button id="btn-clear-clipboard" class="action-btn danger" style="padding:4px 8px; font-size:12px;">Clear All</button>
+        </div>
+        <div class="content-area">
+          <div class="paste-zone">
+            <textarea id="clipboard-input" placeholder="Paste text here to save for this session..."></textarea>
+            <button id="btn-save-clipboard" class="submit-btn">Save Snippet</button>
+          </div>
+          <div class="divider"></div>
+          <div id="clipboard-items" class="clipboard-grid"></div>
+        </div>
+      </section>
+
+      <!-- Tab 4: Calculator Suite -->
+      <section id="calculator" class="tab-panel">
+        <div style="display:flex; height:100%;">
+          <!-- Sidebar -->
+          <div id="calc-sidebar" style="width:45px; background:var(--bg-secondary); border-right:1px solid var(--border-color); display:flex; flex-direction:column; flex-shrink:0; transition:width 0.3s; overflow:hidden;">
+            <button id="calc-menu-toggle" style="text-align:center; padding:15px 0; font-size:16px; background:none; border:none; color:var(--text-secondary); cursor:pointer; border-bottom:1px solid var(--border-color); outline:none;">☰</button>
+            <button class="calc-cat-btn active" data-cat="scientific" title="Scientific">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect><line x1="8" y1="6" x2="16" y2="6"></line><line x1="16" y1="14" x2="16" y2="18"></line><line x1="8" y1="10" x2="8" y2="10.01"></line><line x1="12" y1="10" x2="12" y2="10.01"></line><line x1="16" y1="10" x2="16" y2="10.01"></line><line x1="8" y1="14" x2="8" y2="14.01"></line><line x1="12" y1="14" x2="12" y2="14.01"></line><line x1="8" y1="18" x2="8" y2="18.01"></line><line x1="12" y1="18" x2="12" y2="18.01"></line></svg>
+              <span class="calc-cat-text" style="display:none; margin-left:10px;">Scientific</span>
+            </button>
+            <button class="calc-cat-btn" data-cat="financial" title="Financial">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+              <span class="calc-cat-text" style="display:none; margin-left:10px;">Financial</span>
+            </button>
+            <button class="calc-cat-btn" data-cat="student" title="Student">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg>
+              <span class="calc-cat-text" style="display:none; margin-left:10px;">Student</span>
+            </button>
+            <button class="calc-cat-btn" data-cat="founder" title="Founder">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg>
+              <span class="calc-cat-text" style="display:none; margin-left:10px;">Founder</span>
+            </button>
+            <button class="calc-cat-btn" data-cat="misc" title="Misc">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+              <span class="calc-cat-text" style="display:none; margin-left:10px;">Misc</span>
+            </button>
+          </div>
+          
+          <!-- Workspace -->
+          <div style="flex:1; display:flex; flex-direction:column; overflow:hidden;">
+            <!-- Scientific (Default) -->
+            <div id="calc-scientific" class="calc-workspace-view active calc-area" style="flex:1; display:flex; flex-direction:column;">
+              <div class="calc-container" style="height:100%;">
+                <div class="calc-display" style="padding-bottom:10px;">
+              <div id="calc-history" class="calc-history"></div>
+              <div id="calc-current" class="calc-current">0</div>
+            </div>
+            <div class="calc-buttons scientific">
+              <button class="calc-btn fn-btn" data-val="Deg" id="btn-deg">Deg</button>
+              <button class="calc-btn fn-btn" data-val="!">x!</button>
+              <button class="calc-btn fn-btn" data-val="(">(</button>
+              <button class="calc-btn fn-btn" data-val=")">)</button>
+              <button class="calc-btn fn-btn" data-val="%">%</button>
+              <button class="calc-btn fn-btn" data-val="C">C</button>
+              <button class="calc-btn fn-btn" data-val="AC">AC</button>
+              
+              <button class="calc-btn fn-btn" data-val="Inv" style="font-size:12px;">Inv</button>
+              <button class="calc-btn fn-btn" data-val="sin(">sin</button>
+              <button class="calc-btn fn-btn" data-val="ln(">ln</button>
+              <button class="calc-btn num-btn" data-val="7">7</button>
+              <button class="calc-btn num-btn" data-val="8">8</button>
+              <button class="calc-btn num-btn" data-val="9">9</button>
+              <button class="calc-btn op-btn" data-val="/">÷</button>
+              
+              <button class="calc-btn fn-btn" data-val="π">π</button>
+              <button class="calc-btn fn-btn" data-val="cos(">cos</button>
+              <button class="calc-btn fn-btn" data-val="log(">log</button>
+              <button class="calc-btn num-btn" data-val="4">4</button>
+              <button class="calc-btn num-btn" data-val="5">5</button>
+              <button class="calc-btn num-btn" data-val="6">6</button>
+              <button class="calc-btn op-btn" data-val="*">×</button>
+              
+              <button class="calc-btn fn-btn" data-val="e">e</button>
+              <button class="calc-btn fn-btn" data-val="tan(">tan</button>
+              <button class="calc-btn fn-btn" data-val="√(">√</button>
+              <button class="calc-btn num-btn" data-val="1">1</button>
+              <button class="calc-btn num-btn" data-val="2">2</button>
+              <button class="calc-btn num-btn" data-val="3">3</button>
+              <button class="calc-btn op-btn" data-val="-">−</button>
+              
+              <button class="calc-btn fn-btn" data-val="Ans" style="font-size:12px;">Ans</button>
+              <button class="calc-btn fn-btn" data-val="EXP(">EXP</button>
+              <button class="calc-btn fn-btn" data-val="^">xʸ</button>
+              <button class="calc-btn num-btn" data-val="0">0</button>
+              <button class="calc-btn num-btn" data-val=".">.</button>
+              <button class="calc-btn eq-btn" data-val="=">=</button>
+              <button class="calc-btn op-btn" data-val="+">+</button>
+            </div>
+          </div>
+            </div>
+            
+            <!-- Dynamic Forms Calc -->
+            <div id="calc-dynamic" class="calc-workspace-view content-area" style="flex:1; flex-direction:column; padding:15px;">
+              <select id="dynamic-calc-select" class="search-input" style="margin-bottom:15px; background:var(--bg-primary);"></select>
+              <div id="dynamic-calc-form" class="input-form"></div>
+              <div id="dynamic-calc-result" style="margin-top:20px; font-size:18px; font-weight:bold; color:var(--accent-color); text-align:center; word-break:break-word;"></div>
+            </div>
+            </div>
+            
+          </div>
+      </section>
+
+      <!-- Tab 5: App Hub -->
+      <section id="app-hub" class="tab-panel">
+        <div class="panel-header" style="display:flex; justify-content:space-between; align-items:center;">
+          <h2>App Hub</h2>
+        </div>
+        <div class="content-area" style="overflow-y:auto; padding-bottom:20px;">
+          
+          <div id="app-hub-dynamic-container"></div>
+          
+          <button id="btn-create-category" class="submit-btn" style="margin-top:20px;">+ Create New Category</button>
+
+        </div>
+      </section>
+    </main>
+  </div>
+  <div id="toast-container" style="position:fixed; bottom:20px; left:50%; transform:translateX(-50%); z-index:9999; display:flex; flex-direction:column; gap:10px;"></div>
+  
+  <iframe id="math-sandbox" src="../sandbox/sandbox.html" style="display:none;"></iframe>
+  <script src="popup.js"></script>
+  <script src="bookmarks.js"></script>
+  <script src="schedule.js"></script>
+  <script src="clipboard.js"></script>
+  <script src="calculator.js"></script>
+  <script src="calc_engine.js"></script>
+  <script src="apphub.js"></script>
+</body>
+</html>

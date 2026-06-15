@@ -1,0 +1,39 @@
+{
+  "manifest_version": 3,
+  "name": "SwiftTab",
+  "version": "1.0.0",
+  "description": "Unify fragmented productivity workflows with advanced bookmarks, schedules, clipboard, and calculator.",
+  "icons": {
+    "16": "icon.png",
+    "48": "icon.png",
+    "128": "icon.png"
+  },
+  "permissions": [
+    "bookmarks",
+    "alarms",
+    "storage",
+    "tabs",
+    "notifications",
+    "clipboardWrite",
+    "favicon",
+    "offscreen",
+    "history",
+    "unlimitedStorage",
+    "contextMenus"
+  ],
+  "sandbox": {
+    "pages": ["sandbox/sandbox.html"]
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content/content.js"]
+    }
+  ],
+  "action": {
+    "default_popup": "popup/popup.html"
+  },
+  "background": {
+    "service_worker": "background/background.js"
+  }
+}

@@ -30,4 +30,4 @@ You have complete control over your data. Because all data is stored locally:
 If we make significant changes to this Privacy Policy (for example, if a future feature requires a backend server), we will update this document and notify users through the extension's update notes.
 
 ## 6. Contact
-If you have any questions or concerns about this Privacy Policy or how your data is handled, please submit an issue on the "Support" tab in the Chrome Web Store.
+If you have any questions or concerns about this Privacy Policy or how your data is handled, please submit an issue on the "Support" tab in the Chrome Web Store / Extension page.

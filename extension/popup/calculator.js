@@ -1,4 +1,15 @@
 document.addEventListener('DOMContentLoaded', () => {
+  const btnBackFromCalc = document.getElementById('btn-back-from-calc');
+  if (btnBackFromCalc) {
+    btnBackFromCalc.addEventListener('click', () => {
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      const appHubTab = document.getElementById('app-hub');
+      if (appHubTab) appHubTab.classList.add('active');
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      const appHubBtn = document.querySelector('.tab-btn[data-tab="app-hub"]');
+      if (appHubBtn) appHubBtn.classList.add('active');
+    });
+  }
   const currentDisplay = document.getElementById('calc-current');
   const historyDisplay = document.getElementById('calc-history');
   const buttons = document.querySelectorAll('.calc-btn');

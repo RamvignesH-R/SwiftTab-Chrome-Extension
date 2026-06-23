@@ -1,3 +1,14 @@
+
+window.escapeHTML = function(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+};
+
 document.addEventListener('DOMContentLoaded', () => {
   // --- Theme Management ---
   const themeToggle = document.getElementById('theme-toggle');
@@ -76,7 +87,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
-    document.querySelectorAll('.sd-item').forEach(item => {
+    document.querySelectorAll('#support-dropdown .sd-item').forEach(item => {
       item.addEventListener('click', () => {
         supportDropdown.classList.remove('visible');
         const type = item.getAttribute('data-type');

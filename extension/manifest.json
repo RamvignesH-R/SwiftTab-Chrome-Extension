@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "SwiftTab",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Unify fragmented productivity workflows with advanced bookmarks, schedules, clipboard, and calculator.",
   "icons": {
     "16": "icon.png",

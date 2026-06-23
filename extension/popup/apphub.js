@@ -48,6 +48,49 @@ document.addEventListener('DOMContentLoaded', () => {
   const container = document.getElementById('app-hub-dynamic-container');
   const btnCreateCategory = document.getElementById('btn-create-category');
 
+  // Top-right App Hub native tool icons
+  const btnApphubSettings = document.getElementById('btn-apphub-settings');
+  const apphubSettingsDropdown = document.getElementById('apphub-settings-dropdown');
+  
+  if (btnApphubSettings && apphubSettingsDropdown) {
+    btnApphubSettings.addEventListener('click', (e) => {
+      e.stopPropagation();
+      apphubSettingsDropdown.classList.toggle('visible');
+    });
+    
+    document.addEventListener('click', () => {
+      apphubSettingsDropdown.classList.remove('visible');
+    });
+  }
+
+  const btnApphubCalc = document.getElementById('btn-apphub-calc');
+  if (btnApphubCalc) {
+    btnApphubCalc.addEventListener('click', () => {
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById('calculator').classList.add('active');
+    });
+  }
+
+  const btnApphubCleaner = document.getElementById('btn-apphub-cleaner');
+  if (btnApphubCleaner) {
+    btnApphubCleaner.addEventListener('click', () => {
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      
+      const cleanerPanel = document.getElementById('cleaner-panel');
+      if (cleanerPanel) {
+        cleanerPanel.classList.add('active');
+        // Do not force inline display:flex so it can be correctly hidden by tab routers!
+      }
+      
+      const innerDiv = document.getElementById('view-tab-cleaner-inner');
+      if (innerDiv) innerDiv.style.display = 'flex';
+      
+      if (window.runAnalyzeTabs) window.runAnalyzeTabs();
+    });
+  }
+
   function renderAppHub() {
     chrome.storage.local.get(['customApps', 'customCategories'], (res) => {
       const customApps = res.customApps || [];
@@ -127,7 +170,7 @@ document.addEventListener('DOMContentLoaded', () => {
     a.className = 'app-tile';
     a.href = '#';
     
-    // Ensure we open quietly in a background tab
+    // Handle clicks
     a.addEventListener('click', (e) => {
        e.preventDefault();
        chrome.tabs.create({ url: app.url, active: false });
@@ -142,8 +185,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     a.innerHTML = `
-      <img alt="${app.name}">
-      <span>${app.name}</span>
+      <img alt="${window.escapeHTML(app.name)}">
+      <span>${window.escapeHTML(app.name)}</span>
     `;
     
     const img = a.querySelector('img');

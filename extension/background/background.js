@@ -70,6 +70,11 @@ chrome.runtime.onInstalled.addListener(() => {
     title: "Save Image to SwiftTab Clipboard",
     contexts: ["image"]
   });
+  chrome.contextMenus.create({
+    id: "swifttab_save_text",
+    title: "Save Text to SwiftTab Clipboard",
+    contexts: ["selection"]
+  });
 });
 
 chrome.contextMenus.onClicked.addListener(async (info, tab) => {
@@ -79,20 +84,21 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
       const blob = await response.blob();
       const reader = new FileReader();
       reader.onloadend = function() {
-        saveImageToClipboard(reader.result);
+        saveItemToClipboard('image', reader.result);
       };
       reader.readAsDataURL(blob);
     } catch (err) {
-      // Fallback: If CORS blocks the fetch, save the direct URL
-      saveImageToClipboard(info.srcUrl);
+      saveItemToClipboard('image', info.srcUrl);
     }
+  } else if (info.menuItemId === "swifttab_save_text" && info.selectionText) {
+    saveItemToClipboard('text', info.selectionText.trim());
   }
 });
 
-function saveImageToClipboard(imageData) {
+function saveItemToClipboard(type, data) {
   chrome.storage.local.get(['clipboardData'], (res) => {
     const items = res.clipboardData || [];
-    items.unshift({ type: 'image', data: imageData, id: Date.now().toString() });
+    items.unshift({ type: type, data: data, id: Date.now().toString() });
     if (items.length > 50) items.pop();
     chrome.storage.local.set({ clipboardData: items });
   });
@@ -190,7 +196,8 @@ chrome.alarms.onAlarm.addListener((alarm) => {
         } else {
           tasks.splice(taskIndex, 1);
           chrome.storage.local.get(['completedTasks'], (cRes) => {
-            const completed = cRes.completedTasks || [];
+            let completed = cRes.completedTasks || [];
+            completed = completed.filter(t => !(t.name === task.name && t.url === task.url));
             completed.push(task);
             chrome.storage.local.set({ scheduledTasks: tasks, completedTasks: completed });
           });

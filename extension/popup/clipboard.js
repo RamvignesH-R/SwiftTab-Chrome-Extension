@@ -10,6 +10,13 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  const btnClipHelp = document.getElementById('btn-clip-help');
+  if (btnClipHelp) {
+    btnClipHelp.addEventListener('click', () => {
+      alert("📋 HOW TO USE THE CLIPBOARD:\n\n• TEXT: Highlight & press `Ctrl+C` on any webpage.\n\n• SECURE PAGES: On Chrome Settings/Web Store, use Right-Click -> \"Save Text to SwiftTab\".\n\n• IMAGES: Right-click an image on any website -> \"Save Image to SwiftTab\".\n\n⚠️ NOTE: Screenshots taken using OS tools (PrintScreen/Snipping Tool) cannot be captured!. But can be added manually into the extension.");
+    });
+  }
+
   function renderClipboard(data) {
     itemsContainer.innerHTML = '';
     if (data.length === 0) {

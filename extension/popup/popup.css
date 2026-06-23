@@ -66,6 +66,16 @@ body {
 /* SVG Icons & Support Buttons */
 .icon-svg { width: 16px; height: 16px; vertical-align: middle; }
 .theme-btn svg { width: 20px; height: 20px; }
+.theme-btn {
+  width: 24px;   
+  height: 24px;  
+  padding: 0;    
+}
+.btn-add-current-tab{
+  width: 24px;   
+  height: 24px;  
+  padding: 0;    
+}
 .calc-cat-btn svg { width: 20px; height: 20px; display: inline-block; vertical-align: middle; }
 .group-tile svg { width: 32px; height: 32px; margin-bottom: 8px; stroke: var(--accent-color); }
 

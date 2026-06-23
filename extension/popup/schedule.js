@@ -92,7 +92,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function loadTasks() {
     chrome.storage.local.get(['scheduledTasks', 'completedTasks'], (res) => {
-      renderTasks(res.scheduledTasks || [], res.completedTasks || []);
+      let pastTasks = res.completedTasks || [];
+      
+      // Strict Deduplication based on Name + URL
+      const uniquePast = [];
+      const seen = new Set();
+      // Iterate from the end to keep the most recent completion
+      for (let i = pastTasks.length - 1; i >= 0; i--) {
+        const t = pastTasks[i];
+        const key = t.name + '|' + t.url;
+        if (!seen.has(key)) {
+          seen.add(key);
+          uniquePast.unshift(t);
+        }
+      }
+      
+      // Save cleaned array back to storage if duplicates were found
+      if (uniquePast.length !== pastTasks.length) {
+        chrome.storage.local.set({ completedTasks: uniquePast });
+        pastTasks = uniquePast;
+      }
+
+      renderTasks(res.scheduledTasks || [], pastTasks);
     });
   }
 
@@ -124,7 +145,7 @@ document.addEventListener('DOMContentLoaded', () => {
           timeText = `(at ${d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})})`;
         }
         
-        title.innerHTML = `<strong>${task.name}</strong> <span style="font-size:11px; color:var(--text-secondary);">${timeText}</span>`;
+        title.innerHTML = `<strong>${window.escapeHTML(task.name)}</strong> <span style="font-size:11px; color:var(--text-secondary);">${timeText}</span>`;
         
         const url = document.createElement('div');
         url.className = 'item-url';
@@ -261,6 +282,15 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  const syncGcal = document.getElementById('sync-gcal');
+  if (syncGcal) {
+    syncGcal.addEventListener('change', (e) => {
+      if (e.target.checked) {
+        alert("📅 GOOGLE CALENDAR SYNC GUIDE\n\nYou will be redirected to a new tab. Please note:\n\n1. The Start Time is the exact time your task will trigger.\n2. REMINDERS: Google automatically defaults your reminder to '30 minutes before'. If you want a 15-minute or 2-minute reminder, you must change it manually!\n3. Simply click 'Save' at the top to sync it to your phone and smartwatch!");
+      }
+    });
+  }
+
   form.addEventListener('submit', (e) => {
     e.preventDefault();
     let triggerMs = 0;
@@ -330,6 +360,16 @@ document.addEventListener('DOMContentLoaded', () => {
         if (warningTime < Date.now()) warningTime = Date.now();
         chrome.alarms.create(newTask.id + '_warning', { when: warningTime });
         chrome.alarms.create(newTask.id, { when: triggerMs });
+        
+        const syncGcal = document.getElementById('sync-gcal');
+        if (syncGcal && syncGcal.checked) {
+          const gcalTitle = encodeURIComponent("SwiftTab Task: " + newTask.name);
+          const gcalDetails = encodeURIComponent("SwiftTab scheduled URL:\\n" + newTask.url);
+          const startDate = new Date(triggerMs).toISOString().replace(/-|:|\\.\\d\\d\\d/g,"");
+          const endDate = new Date(triggerMs + 15 * 60000).toISOString().replace(/-|:|\\.\\d\\d\\d/g,"");
+          const gcalUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${gcalTitle}&details=${gcalDetails}&dates=${startDate}/${endDate}`;
+          chrome.tabs.create({ url: gcalUrl });
+        }
         
         form.reset();
         if (taskTypeSel) taskTypeSel.dispatchEvent(new Event('change'));
